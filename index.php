@@ -15,6 +15,7 @@ function adminer_object()
 {
 	// Required to run any plugin
 	include_once './plugins/plugin.php';
+	include 'servers.php';
 
 	// Plugins auto-loader
 	foreach (glob('plugins/*.php') as $filename)
@@ -49,6 +50,8 @@ function adminer_object()
 
 		new AdminerDumpJson,
 		new AdminerDumpZip,
+
+		new AdminerLoginServersGrouped($adminer_login_servers),
 
 		//new AdminerISPConfig('admin', 'admin', 'https://server.domain.tld', true),
 
