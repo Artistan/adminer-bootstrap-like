@@ -11,6 +11,7 @@ class AdminerLoginServersGrouped {
 	/** @access protected */
 	var $servers;
 	var $names;
+	var $grouped;
 
 	/** Set supported servers
 	 * @param array array($group => array($description => array("server" => , "driver" => "server|pgsql|sqlite|...")))
@@ -19,14 +20,23 @@ class AdminerLoginServersGrouped {
 	function __construct($servers) {
 		$this->servers = [];
 		$this->names = [];
+		$this->grouped = [];
 		array_map(function($elements,$key){
 			// merge the opt groups into a list of servers
 			$this->servers = array_replace($this->servers, $elements);
 			// simplify the server list for optionslist() function
-			$this->names[$key] = array_keys($elements);
+			array_walk($elements,function(&$item) {
+				if(isset($item['server'])){
+					$item = $item['server'];
+				}
+			});
+			$this->grouped[$key] = array_flip($elements);
+			// merge the opt groups into a list of servers
+			$this->names = array_replace($this->names, $this->grouped[$key]);
 		},$servers,array_keys($servers));
 		if ($_POST["auth"]) {
-			$key = $_POST["auth"]["server"];
+			$name = $_POST["auth"]["server"];
+			$key = $this->names[$name];
 			$_POST["auth"]["driver"] = $this->servers[$key]["driver"];
 		}
 	}
@@ -42,12 +52,13 @@ class AdminerLoginServersGrouped {
 	}
 
 	function loginFormField($name, $heading, $value) {
-		if ($name == 'driver') {
+		if ($name == 'db' || $name == 'driver') {
 			return '';
 		} elseif ($name == 'server') {
 			//	var_dump($this->names);exit;
-			return $heading . "<select name='auth[server]'>" . optionlist($this->names, SERVER) . "</select>\n";
+			return $heading . "<select name='auth[server]'>" . optionlist($this->grouped, SERVER) . "</select>\n";
 		}
+		return null; // so it will call the parent method or another plugin
 	}
 
 }
