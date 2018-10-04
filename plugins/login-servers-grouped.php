@@ -26,8 +26,11 @@ class AdminerLoginServersGrouped {
 			$this->servers = array_replace($this->servers, $elements);
 			// simplify the server list for optionslist() function
 			array_walk($elements,function(&$item) {
+				// get server, otherwise it should be a string as server location (ip, name,...)
 				if(isset($item['server'])){
 					$item = $item['server'];
+				} elseif(!is_string($item)) {
+					echo ("$key does not have a valid server configuration"); exit;
 				}
 			});
 			$this->grouped[$key] = array_flip($elements);
@@ -37,14 +40,17 @@ class AdminerLoginServersGrouped {
 		if ($_POST["auth"]) {
 			$name = $_POST["auth"]["server"];
 			$key = $this->names[$name];
-			$_POST["auth"]["driver"] = $this->servers[$key]["driver"];
+			if(isset($this->servers[$key]["driver"])) {
+				$_POST["auth"]["driver"] = $this->servers[$key]["driver"];
+			} else { // default to mysql "server" driver
+				$_POST["auth"]["driver"] = 'server';
+			}
 		}
 	}
 
 	function credentials() {
 		if(!is_null(SERVER)) {
-			$key = $this->names[SERVER];
-			return array($this->servers[$key]["server"], $_GET["username"], get_password());
+			return array(SERVER, $_GET["username"], get_password());
 		}
 		return null; // so it will call the parent method or another plugin
 	}
