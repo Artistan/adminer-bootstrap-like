@@ -50,7 +50,6 @@ function adminer_object()
 
 		new AdminerDumpJson,
 		new AdminerDumpZip,
-
 		new AdminerLoginServersGrouped($adminer_login_servers),
 
 		//new AdminerISPConfig('admin', 'admin', 'https://server.domain.tld', true),
