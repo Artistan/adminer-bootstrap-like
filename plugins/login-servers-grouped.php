@@ -42,13 +42,18 @@ class AdminerLoginServersGrouped {
 	}
 
 	function credentials() {
-		return array($this->servers[SERVER]["server"], $_GET["username"], get_password());
+		if(!is_null(SERVER)) {
+			$key = $this->names[SERVER];
+			return array($this->servers[$key]["server"], $_GET["username"], get_password());
+		}
+		return null; // so it will call the parent method or another plugin
 	}
 
 	function login($login, $password) {
-		if (!$this->names[SERVER]) {
+		if (!is_null(SERVER) && !$this->names[SERVER]) {
 			return false;
 		}
+		return null; // so it will call the parent method or another plugin
 	}
 
 	function loginFormField($name, $heading, $value) {
