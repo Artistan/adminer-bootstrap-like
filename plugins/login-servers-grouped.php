@@ -11,6 +11,7 @@ class AdminerLoginServersGrouped {
 	/** @access protected */
 	var $servers;
 	var $names;
+	var $grouped;
 
 	/** Set supported servers
 	 * @param array array($group => array($description => array("server" => , "driver" => "server|pgsql|sqlite|...")))
@@ -19,35 +20,56 @@ class AdminerLoginServersGrouped {
 	function __construct($servers) {
 		$this->servers = [];
 		$this->names = [];
+		$this->grouped = [];
 		array_map(function($elements,$key){
 			// merge the opt groups into a list of servers
 			$this->servers = array_replace($this->servers, $elements);
 			// simplify the server list for optionslist() function
-			$this->names[$key] = array_keys($elements);
+			array_walk($elements,function(&$item) {
+				// get server, otherwise it should be a string as server location (ip, name,...)
+				if(isset($item['server'])){
+					$item = $item['server'];
+				} elseif(!is_string($item)) {
+					echo ("$key does not have a valid server configuration"); exit;
+				}
+			});
+			$this->grouped[$key] = array_flip($elements);
+			// merge the opt groups into a list of servers
+			$this->names = array_replace($this->names, $this->grouped[$key]);
 		},$servers,array_keys($servers));
 		if ($_POST["auth"]) {
-			$key = $_POST["auth"]["server"];
-			$_POST["auth"]["driver"] = $this->servers[$key]["driver"];
+			$name = $_POST["auth"]["server"];
+			$key = $this->names[$name];
+			if(isset($this->servers[$key]["driver"])) {
+				$_POST["auth"]["driver"] = $this->servers[$key]["driver"];
+			} else { // default to mysql "server" driver
+				$_POST["auth"]["driver"] = 'server';
+			}
 		}
 	}
 
 	function credentials() {
-		return array($this->servers[SERVER]["server"], $_GET["username"], get_password());
+		if(!is_null(SERVER)) {
+			return array(SERVER, $_GET["username"], get_password());
+		}
+		return null; // so it will call the parent method or another plugin
 	}
 
 	function login($login, $password) {
-		if (!$this->names[SERVER]) {
+		if (!is_null(SERVER) && !$this->names[SERVER]) {
 			return false;
 		}
+		return null; // so it will call the parent method or another plugin
 	}
 
 	function loginFormField($name, $heading, $value) {
-		if ($name == 'driver') {
+		if ($name == 'db' || $name == 'driver') {
 			return '';
 		} elseif ($name == 'server') {
 			//	var_dump($this->names);exit;
-			return $heading . "<select name='auth[server]'>" . optionlist($this->names, SERVER) . "</select>\n";
+			return $heading . "<select name='auth[server]'>" . optionlist($this->grouped, SERVER) . "</select>\n";
 		}
+		return null; // so it will call the parent method or another plugin
 	}
 
 }
