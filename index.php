@@ -54,7 +54,7 @@ function adminer_object()
 
 	];
 
-	$adminer = new AdminerPlugin($plugins);
+	$adminer = new AdminerPermaLogin($plugins);
 
 	// you can add plugins after instantiating the adminer object so it can use the referenced object!
 	$adminer->addPlugin(new AdminerBootstrapLike($adminer, false));
